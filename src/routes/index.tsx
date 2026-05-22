@@ -2,7 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import { Loader2, Phone, MapPin, ExternalLink, Download, Search } from "lucide-react";
+import { Loader2, Phone, MapPin, ExternalLink, Download, Search, FileSpreadsheet } from "lucide-react";
+import * as XLSX from "xlsx";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -73,14 +74,29 @@ function Index() {
     setSubAreasText(PRESETS[key].join(", "));
   };
 
+  const fileBase = () => `kontak_${area.toLowerCase().replace(/\s+/g, "_") || "hasil"}`;
+
   const downloadCsv = () => {
     const blob = new Blob([toCsv(places)], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `kontak_${area.toLowerCase().replace(/\s+/g, "_")}.csv`;
+    a.download = `${fileBase()}.csv`;
     a.click();
     URL.revokeObjectURL(url);
+  };
+
+  const downloadXlsx = () => {
+    const rows = places.map((p) => ({
+      Nama: p.nama,
+      Alamat: p.alamat,
+      Telepon: p.telepon,
+    }));
+    const ws = XLSX.utils.json_to_sheet(rows, { header: ["Nama", "Alamat", "Telepon"] });
+    ws["!cols"] = [{ wch: 40 }, { wch: 60 }, { wch: 20 }];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Kontak");
+    XLSX.writeFile(wb, `${fileBase()}.xlsx`);
   };
 
   return (
@@ -160,9 +176,14 @@ function Index() {
                 )}
               </Button>
               {places.length > 0 && (
-                <Button variant="outline" onClick={downloadCsv}>
-                  <Download /> Download CSV
-                </Button>
+                <>
+                  <Button variant="outline" onClick={downloadCsv}>
+                    <Download /> CSV
+                  </Button>
+                  <Button variant="outline" onClick={downloadXlsx}>
+                    <FileSpreadsheet /> Excel
+                  </Button>
+                </>
               )}
             </div>
             {mutation.isError && (
