@@ -176,9 +176,14 @@ function Index() {
                 )}
               </Button>
               {places.length > 0 && (
-                <Button variant="outline" onClick={downloadCsv}>
-                  <Download /> Download CSV
-                </Button>
+                <>
+                  <Button variant="outline" onClick={downloadCsv}>
+                    <Download /> CSV
+                  </Button>
+                  <Button variant="outline" onClick={downloadXlsx}>
+                    <FileSpreadsheet /> Excel
+                  </Button>
+                </>
               )}
             </div>
             {mutation.isError && (
