@@ -74,14 +74,29 @@ function Index() {
     setSubAreasText(PRESETS[key].join(", "));
   };
 
+  const fileBase = () => `kontak_${area.toLowerCase().replace(/\s+/g, "_") || "hasil"}`;
+
   const downloadCsv = () => {
     const blob = new Blob([toCsv(places)], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `kontak_${area.toLowerCase().replace(/\s+/g, "_")}.csv`;
+    a.download = `${fileBase()}.csv`;
     a.click();
     URL.revokeObjectURL(url);
+  };
+
+  const downloadXlsx = () => {
+    const rows = places.map((p) => ({
+      Nama: p.nama,
+      Alamat: p.alamat,
+      Telepon: p.telepon,
+    }));
+    const ws = XLSX.utils.json_to_sheet(rows, { header: ["Nama", "Alamat", "Telepon"] });
+    ws["!cols"] = [{ wch: 40 }, { wch: 60 }, { wch: 20 }];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Kontak");
+    XLSX.writeFile(wb, `${fileBase()}.xlsx`);
   };
 
   return (
