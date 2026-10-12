@@ -41,6 +41,27 @@ const PRESETS: Record<string, string[]> = {
 
 const KEYWORDS = ["Praktek Dokter Mandiri", "Klinik Pratama", "Klinik 24 Jam", "Dokter Gigi", "Bidan Praktek Mandiri", "Apotek"];
 
+const HISTORY_KEY = "faskes_search_history";
+const MAX_HISTORY = 8;
+
+interface HistoryItem {
+  query: string;
+  area: string;
+  subAreas: string;
+  ts: number;
+}
+
+function loadHistory(): HistoryItem[] {
+  try {
+    const raw = localStorage.getItem(HISTORY_KEY);
+    if (!raw) return [];
+    const arr = JSON.parse(raw);
+    return Array.isArray(arr) ? arr.filter((h) => h && h.query && h.area) : [];
+  } catch {
+    return [];
+  }
+}
+
 function waLink(tel: string) {
   let d = tel.replace(/\D/g, "");
   if (d.startsWith("0")) d = "62" + d.slice(1);
