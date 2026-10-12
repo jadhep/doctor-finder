@@ -294,7 +294,7 @@ function Index() {
               <p className="text-xs text-muted-foreground">Lebih banyak kecamatan = cakupan lebih luas, waktu lebih lama.</p>
             </div>
           </div>
-          <Button size="lg" className="w-full md:w-auto" onClick={() => mutation.mutate()} disabled={mutation.isPending || !query.trim() || !area.trim()}>
+          <Button size="lg" className="w-full md:w-auto" onClick={() => mutation.mutate(undefined)} disabled={mutation.isPending || !query.trim() || !area.trim()}>
             {mutation.isPending ? <><Loader2 className="animate-spin" /> Mencari fasilitas...</> : <><Search /> Cari Kontak</>}
           </Button>
           {mutation.isError && <p className="text-sm text-destructive">Gagal: {(mutation.error as Error).message}</p>}
