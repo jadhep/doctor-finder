@@ -1,8 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
-import { Loader2, Phone, MapPin, ExternalLink, Download, Search, FileSpreadsheet, Stethoscope, Copy, Check, MessageCircle, Map as MapIcon, Building2, Activity } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Loader2, Phone, MapPin, ExternalLink, Download, Search, FileSpreadsheet, Stethoscope, Copy, Check, MessageCircle, Map as MapIcon, Building2, Activity, History, X, Trash2 } from "lucide-react";
 import * as XLSX from "xlsx";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
