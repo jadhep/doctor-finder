@@ -298,6 +298,48 @@ function Index() {
             {mutation.isPending ? <><Loader2 className="animate-spin" /> Mencari fasilitas...</> : <><Search /> Cari Kontak</>}
           </Button>
           {mutation.isError && <p className="text-sm text-destructive">Gagal: {(mutation.error as Error).message}</p>}
+
+          {history.length > 0 && (
+            <div className="space-y-2 border-t border-border pt-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground">
+                  <History className="size-4" /> Riwayat Pencarian
+                </div>
+                <button
+                  type="button"
+                  onClick={clearHistory}
+                  className="inline-flex items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-destructive"
+                >
+                  <Trash2 className="size-3.5" /> Hapus semua
+                </button>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {history.map((h) => (
+                  <span
+                    key={h.ts}
+                    className="group inline-flex items-center gap-1 rounded-full border border-border bg-card text-sm transition-colors hover:border-primary"
+                  >
+                    <button
+                      type="button"
+                      onClick={() => runFromHistory(h)}
+                      className="py-1 pl-3 pr-1 text-foreground transition-colors hover:text-primary"
+                      title={h.subAreas ? `Kecamatan: ${h.subAreas}` : undefined}
+                    >
+                      {h.query} · {h.area}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => removeHistory(h)}
+                      aria-label={`Hapus riwayat ${h.query} di ${h.area}`}
+                      className="mr-1.5 rounded-full p-0.5 text-muted-foreground transition-colors hover:text-destructive"
+                    >
+                      <X className="size-3.5" />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {mutation.isPending && (
