@@ -1,8 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
-import { Loader2, Phone, MapPin, ExternalLink, Download, Search, FileSpreadsheet, Stethoscope, Copy, Check, MessageCircle, Map as MapIcon, Building2, Activity } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Loader2, Phone, MapPin, ExternalLink, Download, Search, FileSpreadsheet, Stethoscope, Copy, Check, MessageCircle, Map as MapIcon, Building2, Activity, History, X, Trash2 } from "lucide-react";
 import * as XLSX from "xlsx";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -40,6 +40,27 @@ const PRESETS: Record<string, string[]> = {
 };
 
 const KEYWORDS = ["Praktek Dokter Mandiri", "Klinik Pratama", "Klinik 24 Jam", "Dokter Gigi", "Bidan Praktek Mandiri", "Apotek"];
+
+const HISTORY_KEY = "faskes_search_history";
+const MAX_HISTORY = 8;
+
+interface HistoryItem {
+  query: string;
+  area: string;
+  subAreas: string;
+  ts: number;
+}
+
+function loadHistory(): HistoryItem[] {
+  try {
+    const raw = localStorage.getItem(HISTORY_KEY);
+    if (!raw) return [];
+    const arr = JSON.parse(raw);
+    return Array.isArray(arr) ? arr.filter((h) => h && h.query && h.area) : [];
+  } catch {
+    return [];
+  }
+}
 
 function waLink(tel: string) {
   let d = tel.replace(/\D/g, "");
@@ -120,23 +141,72 @@ function Index() {
   const [query, setQuery] = useState("Praktek Dokter Mandiri");
   const [area, setArea] = useState("Depok");
   const [subAreasText, setSubAreasText] = useState(PRESETS.Depok.join(", "));
+  const [history, setHistory] = useState<HistoryItem[]>([]);
+
+  useEffect(() => {
+    setHistory(loadHistory());
+  }, []);
+
+  const saveHistory = (item: Omit<HistoryItem, "ts">) => {
+    const next: HistoryItem[] = [
+      { ...item, ts: Date.now() },
+      ...history.filter((h) => !(h.query === item.query && h.area === item.area)),
+    ].slice(0, MAX_HISTORY);
+    setHistory(next);
+    try {
+      localStorage.setItem(HISTORY_KEY, JSON.stringify(next));
+    } catch {
+      // storage penuh / privat — abaikan
+    }
+  };
+
+  const removeHistory = (h: HistoryItem) => {
+    const next = history.filter((x) => x.ts !== h.ts);
+    setHistory(next);
+    try {
+      localStorage.setItem(HISTORY_KEY, JSON.stringify(next));
+    } catch {
+      // abaikan
+    }
+  };
+
+  const clearHistory = () => {
+    setHistory([]);
+    try {
+      localStorage.removeItem(HISTORY_KEY);
+    } catch {
+      // abaikan
+    }
+  };
 
   const mutation = useMutation({
-    mutationFn: async () => {
-      const subAreas = subAreasText
+    mutationFn: async (input?: { query: string; area: string; subAreasText: string }) => {
+      const q = (input?.query ?? query).trim();
+      const a = (input?.area ?? area).trim();
+      const s = input?.subAreasText ?? subAreasText;
+      const subAreas = s
         .split(",")
-        .map((s) => s.trim())
+        .map((x) => x.trim())
         .filter(Boolean);
-      return fn({
+      const result = await fn({
         data: {
-          query: query.trim(),
-          area: area.trim(),
+          query: q,
+          area: a,
           subAreas,
           maxPages: 2,
         },
       });
+      saveHistory({ query: q, area: a, subAreas: s });
+      return result;
     },
   });
+
+  const runFromHistory = (h: HistoryItem) => {
+    setQuery(h.query);
+    setArea(h.area);
+    setSubAreasText(h.subAreas);
+    mutation.mutate({ query: h.query, area: h.area, subAreasText: h.subAreas });
+  };
 
   const places = mutation.data?.places ?? [];
   const withPhone = useMemo(() => places.filter((p) => p.telepon).length, [places]);
@@ -224,10 +294,52 @@ function Index() {
               <p className="text-xs text-muted-foreground">Lebih banyak kecamatan = cakupan lebih luas, waktu lebih lama.</p>
             </div>
           </div>
-          <Button size="lg" className="w-full md:w-auto" onClick={() => mutation.mutate()} disabled={mutation.isPending || !query.trim() || !area.trim()}>
+          <Button size="lg" className="w-full md:w-auto" onClick={() => mutation.mutate(undefined)} disabled={mutation.isPending || !query.trim() || !area.trim()}>
             {mutation.isPending ? <><Loader2 className="animate-spin" /> Mencari fasilitas...</> : <><Search /> Cari Kontak</>}
           </Button>
           {mutation.isError && <p className="text-sm text-destructive">Gagal: {(mutation.error as Error).message}</p>}
+
+          {history.length > 0 && (
+            <div className="space-y-2 border-t border-border pt-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground">
+                  <History className="size-4" /> Riwayat Pencarian
+                </div>
+                <button
+                  type="button"
+                  onClick={clearHistory}
+                  className="inline-flex items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-destructive"
+                >
+                  <Trash2 className="size-3.5" /> Hapus semua
+                </button>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {history.map((h) => (
+                  <span
+                    key={h.ts}
+                    className="group inline-flex items-center gap-1 rounded-full border border-border bg-card text-sm transition-colors hover:border-primary"
+                  >
+                    <button
+                      type="button"
+                      onClick={() => runFromHistory(h)}
+                      className="py-1 pl-3 pr-1 text-foreground transition-colors hover:text-primary"
+                      title={h.subAreas ? `Kecamatan: ${h.subAreas}` : undefined}
+                    >
+                      {h.query} · {h.area}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => removeHistory(h)}
+                      aria-label={`Hapus riwayat ${h.query} di ${h.area}`}
+                      className="mr-1.5 rounded-full p-0.5 text-muted-foreground transition-colors hover:text-destructive"
+                    >
+                      <X className="size-3.5" />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {mutation.isPending && (
