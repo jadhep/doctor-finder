@@ -141,23 +141,72 @@ function Index() {
   const [query, setQuery] = useState("Praktek Dokter Mandiri");
   const [area, setArea] = useState("Depok");
   const [subAreasText, setSubAreasText] = useState(PRESETS.Depok.join(", "));
+  const [history, setHistory] = useState<HistoryItem[]>([]);
+
+  useEffect(() => {
+    setHistory(loadHistory());
+  }, []);
+
+  const saveHistory = (item: Omit<HistoryItem, "ts">) => {
+    const next: HistoryItem[] = [
+      { ...item, ts: Date.now() },
+      ...history.filter((h) => !(h.query === item.query && h.area === item.area)),
+    ].slice(0, MAX_HISTORY);
+    setHistory(next);
+    try {
+      localStorage.setItem(HISTORY_KEY, JSON.stringify(next));
+    } catch {
+      // storage penuh / privat — abaikan
+    }
+  };
+
+  const removeHistory = (h: HistoryItem) => {
+    const next = history.filter((x) => x.ts !== h.ts);
+    setHistory(next);
+    try {
+      localStorage.setItem(HISTORY_KEY, JSON.stringify(next));
+    } catch {
+      // abaikan
+    }
+  };
+
+  const clearHistory = () => {
+    setHistory([]);
+    try {
+      localStorage.removeItem(HISTORY_KEY);
+    } catch {
+      // abaikan
+    }
+  };
 
   const mutation = useMutation({
-    mutationFn: async () => {
-      const subAreas = subAreasText
+    mutationFn: async (input?: { query: string; area: string; subAreasText: string }) => {
+      const q = (input?.query ?? query).trim();
+      const a = (input?.area ?? area).trim();
+      const s = input?.subAreasText ?? subAreasText;
+      const subAreas = s
         .split(",")
-        .map((s) => s.trim())
+        .map((x) => x.trim())
         .filter(Boolean);
-      return fn({
+      const result = await fn({
         data: {
-          query: query.trim(),
-          area: area.trim(),
+          query: q,
+          area: a,
           subAreas,
           maxPages: 2,
         },
       });
+      saveHistory({ query: q, area: a, subAreas: s });
+      return result;
     },
   });
+
+  const runFromHistory = (h: HistoryItem) => {
+    setQuery(h.query);
+    setArea(h.area);
+    setSubAreasText(h.subAreas);
+    mutation.mutate({ query: h.query, area: h.area, subAreasText: h.subAreas });
+  };
 
   const places = mutation.data?.places ?? [];
   const withPhone = useMemo(() => places.filter((p) => p.telepon).length, [places]);
