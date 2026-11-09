@@ -34,7 +34,7 @@ export function BroadcastPanel({ contacts, area, onClose }: Props) {
   const open = (p: Place) => {
     const url = linkFor(p);
     if (!url) return;
-    window.open(url, "_blank", "noopener");
+    window.open(url, "_blank", "noopener,noreferrer");
     setSent((s) => new Set(s).add(p.id));
   };
   const next = contacts.find((p) => !sent.has(p.id));
