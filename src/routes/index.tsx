@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { searchPlaces, type Place } from "@/lib/places.functions";
+import { waLink } from "@/lib/wa";
+import { BroadcastPanel } from "@/components/BroadcastPanel";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -62,13 +64,8 @@ function loadHistory(): HistoryItem[] {
   }
 }
 
-function waLink(tel: string) {
-  let d = tel.replace(/\D/g, "");
-  if (d.startsWith("0")) d = "62" + d.slice(1);
-  return d.startsWith("62") && d.length >= 10 ? `https://wa.me/${d}` : null;
-}
-
-function PlaceCard({ p }: { p: Place }) {
+function PlaceCard({ p, selected, onToggle }: { p: Place; selected: boolean; onToggle: () => void }) {
+  const canWa = !!(p.telepon && waLink(p.telepon));
   const [copied, setCopied] = useState(false);
   const wa = p.telepon ? waLink(p.telepon) : null;
   const copy = async () => {
@@ -81,6 +78,14 @@ function PlaceCard({ p }: { p: Place }) {
     <div className="group rounded-xl border border-border bg-card p-4 transition-shadow hover:shadow-soft">
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-start gap-3 min-w-0">
+          <input
+            type="checkbox"
+            checked={selected}
+            onChange={onToggle}
+            disabled={!canWa}
+            aria-label={`Pilih ${p.nama}`}
+            className="mt-3 size-4 shrink-0 accent-primary disabled:opacity-30"
+          />
           <div className="grid size-10 shrink-0 place-items-center rounded-lg bg-secondary text-primary">
             <Building2 className="size-5" />
           </div>
@@ -212,6 +217,21 @@ function Index() {
   const withPhone = useMemo(() => places.filter((p) => p.telepon).length, [places]);
   const [onlyPhone, setOnlyPhone] = useState(false);
   const shown = useMemo(() => (onlyPhone ? places.filter((p) => p.telepon) : places), [places, onlyPhone]);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [showBroadcast, setShowBroadcast] = useState(false);
+  useEffect(() => {
+    setSelected(new Set());
+    setShowBroadcast(false);
+  }, [mutation.data]);
+  const waAble = useMemo(() => places.filter((p) => p.telepon && waLink(p.telepon)), [places]);
+  const toggle = (id: string) =>
+    setSelected((s) => {
+      const n = new Set(s);
+      if (n.has(id)) n.delete(id);
+      else n.add(id);
+      return n;
+    });
+  const selectedPlaces = useMemo(() => places.filter((p) => selected.has(p.id)), [places, selected]);
 
   const applyPreset = (key: string) => {
     setArea(key);
@@ -379,8 +399,19 @@ function Index() {
                 <Button size="sm" onClick={downloadXlsx}><FileSpreadsheet /> Excel</Button>
               </div>
             </div>
+            <div className="flex flex-wrap items-center gap-2 rounded-xl border border-border bg-card p-3 text-sm">
+              <span className="font-medium">{selected.size} kontak dipilih</span>
+              <Button size="sm" variant="outline" onClick={() => setSelected(new Set(waAble.map((p) => p.id)))}>Pilih semua WA ({waAble.length})</Button>
+              {selected.size > 0 && <Button size="sm" variant="ghost" onClick={() => setSelected(new Set())}>Batal pilih</Button>}
+              <Button size="sm" className="ml-auto" disabled={selected.size === 0} onClick={() => setShowBroadcast(true)}>
+                <MessageCircle /> Kirim WhatsApp
+              </Button>
+            </div>
+            {showBroadcast && selectedPlaces.length > 0 && (
+              <BroadcastPanel contacts={selectedPlaces} area={area} onClose={() => setShowBroadcast(false)} />
+            )}
             <div className="grid gap-3">
-              {shown.map((p) => <PlaceCard key={p.id} p={p} />)}
+              {shown.map((p) => <PlaceCard key={p.id} p={p} selected={selected.has(p.id)} onToggle={() => toggle(p.id)} />)}
             </div>
           </div>
         )}
