@@ -116,7 +116,7 @@ function PlaceCard({ p, selected, onToggle }: { p: Place; selected: boolean; onT
             </Button>
             {wa && (
               <Button size="sm" variant="outline" asChild>
-                <a href={wa} target="_blank" rel="noreferrer"><MessageCircle className="text-success" /> WhatsApp</a>
+                <a href={wa} target="_blank" rel="noopener noreferrer"><MessageCircle className="text-success" /> WhatsApp</a>
               </Button>
             )}
           </>

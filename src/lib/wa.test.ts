@@ -15,6 +15,6 @@ describe("wa helpers", () => {
     expect(fillTemplate("Halo {nama} di {kota}", { nama: "Klinik A", kota: "Depok" })).toBe("Halo Klinik A di Depok");
   });
   it("encodes message in link", () => {
-    expect(waLink("08123456789", "Hai A")).toBe("https://wa.me/628123456789?text=Hai%20A");
+    expect(waLink("08123456789", "Hai A")).toBe("https://web.whatsapp.com/send?phone=628123456789&text=Hai%20A");
   });
 });
