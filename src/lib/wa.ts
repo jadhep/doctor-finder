@@ -7,7 +7,11 @@ export function normalizeWaNumber(tel: string): string | null {
 export function waLink(tel: string, text?: string): string | null {
   const d = normalizeWaNumber(tel);
   if (!d) return null;
-  return `https://web.whatsapp.com/send?phone=${d}${text ? `&text=${encodeURIComponent(text)}` : ""}`;
+  return `https://wa.me/${d}${text ? `?text=${encodeURIComponent(text)}` : ""}`;
+}
+
+export function _unused(d: string, text?: string) {
+  return `${d}${text ? `&text=${encodeURIComponent(text)}` : ""}`;
 }
 
 export function fillTemplate(tpl: string, vars: Record<string, string>): string {
