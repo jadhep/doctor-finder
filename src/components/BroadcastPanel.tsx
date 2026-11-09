@@ -37,6 +37,18 @@ export function BroadcastPanel({ contacts, area, onClose }: Props) {
     window.open(url, "_blank", "noopener,noreferrer");
     setSent((s) => new Set(s).add(p.id));
   };
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const copyMsg = async (p: Place) => {
+    const msg = fillTemplate(tpl, { nama: p.nama, alamat: p.alamat, kota: area });
+    try {
+      await navigator.clipboard.writeText(`${p.telepon}\n\n${msg}`);
+      setCopiedId(p.id);
+      setSent((s) => new Set(s).add(p.id));
+      setTimeout(() => setCopiedId(null), 1500);
+    } catch {
+      // abaikan
+    }
+  };
   const next = contacts.find((p) => !sent.has(p.id));
   const done = sent.size;
 
@@ -84,9 +96,14 @@ export function BroadcastPanel({ contacts, area, onClose }: Props) {
               {sent.has(p.id) ? <Check className="size-4 shrink-0 text-success" /> : <span className="size-4 shrink-0 rounded-full border border-border" />}
               <span className="truncate">{p.nama}</span>
             </span>
-            <button type="button" onClick={() => open(p)} className="shrink-0 text-xs text-primary hover:underline">
-              {sent.has(p.id) ? "Buka lagi" : "Kirim"}
-            </button>
+            <span className="flex shrink-0 items-center gap-3">
+              <button type="button" onClick={() => copyMsg(p)} className="text-xs text-muted-foreground hover:text-primary">
+                {copiedId === p.id ? "Tersalin!" : "Salin pesan"}
+              </button>
+              <button type="button" onClick={() => open(p)} className="text-xs text-primary hover:underline">
+                {sent.has(p.id) ? "Buka lagi" : "Kirim"}
+              </button>
+            </span>
           </div>
         ))}
       </div>

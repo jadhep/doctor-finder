@@ -10,9 +10,6 @@ export function waLink(tel: string, text?: string): string | null {
   return `https://wa.me/${d}${text ? `?text=${encodeURIComponent(text)}` : ""}`;
 }
 
-export function _unused(d: string, text?: string) {
-  return `${d}${text ? `&text=${encodeURIComponent(text)}` : ""}`;
-}
 
 export function fillTemplate(tpl: string, vars: Record<string, string>): string {
   return tpl.replace(/\{(\w+)\}/g, (m, k) => (k in vars ? vars[k] : m));
