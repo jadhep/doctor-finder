@@ -42,8 +42,6 @@ const PRESETS: Record<string, string[]> = {
   Bogor: ["Bogor Tengah", "Bogor Utara", "Bogor Selatan", "Bogor Timur", "Bogor Barat", "Tanah Sareal"],
 };
 
-const KEYWORDS = ["Praktek Dokter Mandiri", "Klinik Pratama", "Klinik 24 Jam", "Dokter Gigi", "Bidan Praktek Mandiri", "Apotek"];
-
 const HISTORY_KEY = "faskes_search_history";
 const MAX_HISTORY = 8;
 
@@ -306,11 +304,6 @@ function Index() {
               ))}
             </select>
             <Input id="query" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Praktek Dokter Mandiri" />
-            <div className="flex flex-wrap gap-2 pt-1">
-              {KEYWORDS.map((k) => (
-                <button key={k} type="button" className={pill(query === k)} onClick={() => setQuery(k)}>{k}</button>
-              ))}
-            </div>
           </div>
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
