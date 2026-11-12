@@ -276,7 +276,7 @@ function Index() {
               <span className="size-1.5 rounded-full bg-primary-foreground" /> Google Maps aktif
             </span>
           </div>
-          <h1 className="mt-6 text-3xl font-bold tracking-tight md:text-4xl">Cari Kontak Praktek Dokter & Klinik</h1>
+          <h1 className="mt-6 text-3xl font-bold tracking-tight md:text-4xl">Cari Kontak Fasilitas Kesehatan</h1>
           <p className="mt-2 max-w-2xl opacity-90">Temukan nomor telepon & alamat fasilitas kesehatan di kota mana pun, lalu hubungi atau ekspor dalam hitungan detik.</p>
           <div className="mt-4 flex flex-wrap gap-2 text-xs opacity-90">
             <span className="rounded-full bg-primary-foreground/15 px-2.5 py-1">1. Cari di Maps</span>
