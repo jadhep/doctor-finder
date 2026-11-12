@@ -1,3 +1,4 @@
+import { SPECIALTIES } from "@/lib/specialties";
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation } from "@tanstack/react-query";
@@ -291,6 +292,19 @@ function Index() {
         <div className="rounded-2xl border border-border bg-card p-5 shadow-soft md:p-6 space-y-5">
           <div className="space-y-2">
             <Label htmlFor="query">Jenis fasilitas / kata kunci</Label>
+            <select
+              aria-label="Pilih spesialisasi"
+              className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+              value={SPECIALTIES.some((g) => g.items.includes(query)) ? query : ""}
+              onChange={(e) => e.target.value && setQuery(e.target.value)}
+            >
+              <option value="">— Pilih spesialisasi (atau ketik bebas di bawah) —</option>
+              {SPECIALTIES.map((g) => (
+                <optgroup key={g.group} label={g.group}>
+                  {g.items.map((it) => <option key={it} value={it}>{it}</option>)}
+                </optgroup>
+              ))}
+            </select>
             <Input id="query" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Praktek Dokter Mandiri" />
             <div className="flex flex-wrap gap-2 pt-1">
               {KEYWORDS.map((k) => (
