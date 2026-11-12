@@ -1,4 +1,5 @@
 import { SPECIALTIES } from "@/lib/specialties";
+import { INDONESIA_CITIES } from "@/lib/indonesia-cities";
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation } from "@tanstack/react-query";
@@ -44,6 +45,10 @@ const PRESETS: Record<string, string[]> = {
 
 const HISTORY_KEY = "faskes_search_history";
 const MAX_HISTORY = 8;
+
+function normalizeCityLabel(value: string) {
+  return value.replace(/^(Kabupaten Administrasi|Kabupaten|Kota Administrasi|Kota)\s+/i, "").trim().toLocaleLowerCase("id-ID");
+}
 
 interface HistoryItem {
   query: string;
@@ -146,6 +151,10 @@ function Index() {
   const [area, setArea] = useState("Depok");
   const [subAreasText, setSubAreasText] = useState(PRESETS.Depok.join(", "));
   const [history, setHistory] = useState<HistoryItem[]>([]);
+  const selectedCity = useMemo(
+    () => INDONESIA_CITIES.flatMap((region) => region.cities).find((city) => city === area || normalizeCityLabel(city) === normalizeCityLabel(area)) ?? "",
+    [area],
+  );
 
   useEffect(() => {
     setHistory(loadHistory());
@@ -308,6 +317,24 @@ function Index() {
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="area">Kota</Label>
+              <select
+                aria-label="Pilih kabupaten atau kota"
+                className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                value={selectedCity}
+                onChange={(e) => {
+                  if (e.target.value) {
+                    setArea(e.target.value);
+                    setSubAreasText("");
+                  }
+                }}
+              >
+                <option value="">— Pilih kabupaten/kota (38 provinsi) —</option>
+                {INDONESIA_CITIES.map((region) => (
+                  <optgroup key={region.province} label={region.province}>
+                    {region.cities.map((city) => <option key={city} value={city}>{city}</option>)}
+                  </optgroup>
+                ))}
+              </select>
               <Input id="area" value={area} onChange={(e) => setArea(e.target.value)} placeholder="Depok" />
               <div className="flex flex-wrap gap-2 pt-1">
                 {Object.keys(PRESETS).map((k) => (
