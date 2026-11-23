@@ -192,8 +192,9 @@ function Index() {
     }
   };
 
+  const [mode, setMode] = useState<"hemat" | "lengkap">("hemat");
   const mutation = useMutation({
-    mutationFn: async (input?: { query: string; area: string; subAreasText: string }) => {
+    mutationFn: async (input?: { query?: string; area?: string; subAreasText?: string; refresh?: boolean }) => {
       const q = (input?.query ?? query).trim();
       const a = (input?.area ?? area).trim();
       const s = input?.subAreasText ?? subAreasText;
@@ -206,7 +207,8 @@ function Index() {
           query: q,
           area: a,
           subAreas,
-          maxPages: 2,
+          maxPages: mode === "hemat" ? 1 : 3,
+          refresh: input?.refresh ?? false,
         },
       });
       saveHistory({ query: q, area: a, subAreas: s });
@@ -348,6 +350,14 @@ function Index() {
               <p className="text-xs text-muted-foreground">Lebih banyak kecamatan = cakupan lebih luas, waktu lebih lama.</p>
             </div>
           </div>
+          <div className="space-y-2">
+            <Label>Jumlah hasil</Label>
+            <div className="flex flex-wrap gap-2">
+              <button type="button" className={pill(mode === "hemat")} onClick={() => setMode("hemat")}>Mode Hemat (~20 hasil)</button>
+              <button type="button" className={pill(mode === "lengkap")} onClick={() => setMode("lengkap")}>Mode Lengkap (~60 hasil)</button>
+            </div>
+            <p className="text-xs text-muted-foreground">Pencarian yang sama dalam 30 hari diambil dari simpanan, tanpa memakai kredit.</p>
+          </div>
           <Button size="lg" className="w-full md:w-auto" onClick={() => mutation.mutate(undefined)} disabled={mutation.isPending || !query.trim() || !area.trim()}>
             {mutation.isPending ? <><Loader2 className="animate-spin" /> Mencari fasilitas...</> : <><Search /> Cari Kontak</>}
           </Button>
@@ -410,6 +420,14 @@ function Index() {
 
         {!mutation.isPending && places.length > 0 && (
           <div className="mt-8 space-y-4">
+            {mutation.data?.cached && (
+              <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border bg-card px-4 py-3 text-sm">
+                <span className="text-muted-foreground">
+                  Hasil dari simpanan ({new Date(mutation.data.cachedAt).toLocaleDateString("id-ID")}) — tanpa biaya kredit.
+                </span>
+                <Button size="sm" variant="outline" onClick={() => mutation.mutate({ refresh: true })}>Segarkan data</Button>
+              </div>
+            )}
             <div className="grid grid-cols-3 gap-3">
               {[
                 { label: "Faskes ditemukan", value: places.length, icon: Building2 },

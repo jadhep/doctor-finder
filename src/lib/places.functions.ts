@@ -18,7 +18,10 @@ const InputSchema = z.object({
   area: z.string().min(2).max(100),
   subAreas: z.array(z.string().min(1).max(100)).max(30).default([]),
   maxPages: z.number().int().min(1).max(3).default(2),
+  refresh: z.boolean().default(false),
 });
+
+const CACHE_DAYS = 30;
 
 export type Place = {
   id: string;
@@ -61,6 +64,25 @@ export const searchPlaces = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const lovable = process.env.LOVABLE_API_KEY;
     const gmaps = process.env.GOOGLE_MAPS_API_KEY;
+    const norm = (x: string) => x.trim().toLowerCase().replace(/\s+/g, " ");
+    const cacheKey = [
+      norm(data.query),
+      norm(data.area),
+      data.subAreas.map(norm).sort().join(","),
+      data.maxPages,
+    ].join("|");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    if (!data.refresh) {
+      const { data: row } = await supabaseAdmin
+        .from("places_cache")
+        .select("places, created_at")
+        .eq("cache_key", cacheKey)
+        .maybeSingle();
+      if (row && Date.now() - new Date(row.created_at).getTime() < CACHE_DAYS * 864e5) {
+        return { places: row.places as unknown as Place[], cached: true, cachedAt: row.created_at };
+      }
+    }
+
     if (!lovable) throw new Error("LOVABLE_API_KEY is not configured");
     if (!gmaps) throw new Error("GOOGLE_MAPS_API_KEY is not configured");
 
@@ -94,5 +116,15 @@ export const searchPlaces = createServerFn({ method: "POST" })
         await new Promise((r) => setTimeout(r, 2000));
       }
     }
-    return { places: Array.from(results.values()) };
+    const places = Array.from(results.values());
+    const now = new Date().toISOString();
+    const { error } = await supabaseAdmin.from("places_cache").upsert({
+      cache_key: cacheKey,
+      query: data.query,
+      area: data.area,
+      places: places as unknown as never,
+      created_at: now,
+    });
+    if (error) console.error("cache save failed", error.message);
+    return { places, cached: false, cachedAt: now };
   });
