@@ -138,10 +138,18 @@ function PlaceCard({ p, selected, onToggle }: { p: Place; selected: boolean; onT
   );
 }
 
+function mapsUrl(p: Place) {
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.nama + " " + p.alamat)}&query_place_id=${p.id}`;
+}
+
+function waUrl(p: Place) {
+  return p.telepon ? waLink(p.telepon) ?? "" : "";
+}
+
 function toCsv(rows: Place[]): string {
   const esc = (v: string) => `"${v.replace(/"/g, '""')}"`;
-  const head = ["Nama", "Alamat", "Telepon", "Website"].map(esc).join(",");
-  const body = rows.map((r) => [r.nama, r.alamat, r.telepon, r.website].map(esc).join(","));
+  const head = ["Nama", "Alamat", "Telepon", "WhatsApp", "Website", "Google Maps"].map(esc).join(",");
+  const body = rows.map((r) => [r.nama, r.alamat, r.telepon, waUrl(r), r.website, mapsUrl(r)].map(esc).join(","));
   return [head, ...body].join("\n");
 }
 
@@ -265,9 +273,12 @@ function Index() {
       Nama: p.nama,
       Alamat: p.alamat,
       Telepon: p.telepon,
+      WhatsApp: waUrl(p),
+      Website: p.website,
+      "Google Maps": mapsUrl(p),
     }));
-    const ws = XLSX.utils.json_to_sheet(rows, { header: ["Nama", "Alamat", "Telepon"] });
-    ws["!cols"] = [{ wch: 40 }, { wch: 60 }, { wch: 20 }];
+    const ws = XLSX.utils.json_to_sheet(rows, { header: ["Nama", "Alamat", "Telepon", "WhatsApp", "Website", "Google Maps"] });
+    ws["!cols"] = [{ wch: 40 }, { wch: 60 }, { wch: 20 }, { wch: 35 }, { wch: 40 }, { wch: 50 }];
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Kontak");
     XLSX.writeFile(wb, `${fileBase()}.xlsx`);
