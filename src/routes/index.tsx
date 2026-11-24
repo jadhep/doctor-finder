@@ -233,8 +233,13 @@ function Index() {
 
   const places = mutation.data?.places ?? [];
   const withPhone = useMemo(() => places.filter((p) => p.telepon).length, [places]);
-  const [onlyPhone, setOnlyPhone] = useState(false);
-  const shown = useMemo(() => (onlyPhone ? places.filter((p) => p.telepon) : places), [places, onlyPhone]);
+  const withoutWebsite = useMemo(() => places.filter((p) => !p.website).length, [places]);
+  const [filterTab, setFilterTab] = useState<"all" | "phone" | "no-website">("all");
+  const shown = useMemo(() => {
+    if (filterTab === "phone") return places.filter((p) => p.telepon);
+    if (filterTab === "no-website") return places.filter((p) => !p.website);
+    return places;
+  }, [places, filterTab]);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [showBroadcast, setShowBroadcast] = useState(false);
   useEffect(() => {
@@ -453,9 +458,10 @@ function Index() {
               ))}
             </div>
             <div className="sticky top-0 z-10 -mx-4 flex flex-wrap items-center justify-between gap-3 border-b border-border bg-background/90 px-4 py-3 backdrop-blur">
-              <div className="flex gap-2">
-                <button className={pill(!onlyPhone)} onClick={() => setOnlyPhone(false)}>Semua ({places.length})</button>
-                <button className={pill(onlyPhone)} onClick={() => setOnlyPhone(true)}>Ada Telepon ({withPhone})</button>
+              <div className="flex flex-wrap gap-2">
+                <button type="button" className={pill(filterTab === "all")} onClick={() => setFilterTab("all")}>Semua ({places.length})</button>
+                <button type="button" className={pill(filterTab === "phone")} onClick={() => setFilterTab("phone")}>Ada Telepon ({withPhone})</button>
+                <button type="button" className={pill(filterTab === "no-website")} onClick={() => setFilterTab("no-website")}>Belum Ada Website ({withoutWebsite})</button>
               </div>
               <div className="flex gap-2">
                 <Button size="sm" variant="outline" onClick={downloadCsv}><Download /> CSV</Button>
@@ -474,7 +480,9 @@ function Index() {
               <BroadcastPanel contacts={selectedPlaces} area={area} onClose={() => setShowBroadcast(false)} />
             )}
             <div className="grid gap-3">
-              {shown.map((p) => <PlaceCard key={p.id} p={p} selected={selected.has(p.id)} onToggle={() => toggle(p.id)} />)}
+              {shown.length > 0 ? shown.map((p) => <PlaceCard key={p.id} p={p} selected={selected.has(p.id)} onToggle={() => toggle(p.id)} />) : (
+                <p className="py-6 text-center text-sm text-muted-foreground">Tidak ada hasil yang sesuai dengan filter ini.</p>
+              )}
             </div>
           </div>
         )}
