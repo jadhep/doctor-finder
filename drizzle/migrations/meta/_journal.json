@@ -8,6 +8,20 @@
       "when": 1795422012502,
       "tag": "0000_migration",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1795573030231,
+      "tag": "0001_add_account_approval_and_roles",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1795573099632,
+      "tag": "0002_tighten_account_access_constraints",
+      "breakpoints": true
     }
   ]
 }
