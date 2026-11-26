@@ -1,0 +1,3 @@
+- [ ] Add email sign-in and self-registration with pending/rejected/approved account screens.
+- [ ] Add admin-only approval controls and protect the search service on the server.
+- [ ] Run access-rule tests and verify the live preview and build diagnostics.

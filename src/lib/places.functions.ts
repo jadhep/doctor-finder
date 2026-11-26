@@ -1,5 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { isAccountApproved } from "@/lib/account-access";
 
 const GATEWAY = "https://connector-gateway.lovable.dev/google_maps/places/v1/places:searchText";
 
@@ -60,8 +62,18 @@ async function searchText(body: Record<string, unknown>, keys: { lovable: string
 }
 
 export const searchPlaces = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => InputSchema.parse(data))
-  .handler(async ({ data }) => {
+  .handler(async ({ data, context }) => {
+    const { data: account, error: accessError } = await context.supabase
+      .from("account_access")
+      .select("status")
+      .eq("user_id", context.userId)
+      .maybeSingle();
+    if (accessError || !account || !isAccountApproved(account.status)) {
+      throw new Error("Account approval is required to search.");
+    }
+
     const lovable = process.env.LOVABLE_API_KEY;
     const gmaps = process.env.GOOGLE_MAPS_API_KEY;
     const norm = (x: string) => x.trim().toLowerCase().replace(/\s+/g, " ");

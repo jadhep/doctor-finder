@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { searchPlaces, type Place } from "@/lib/places.functions";
 import { waLink } from "@/lib/wa";
 import { BroadcastPanel } from "@/components/BroadcastPanel";
+import { AccountGate } from "@/components/AccountGate";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -154,6 +155,14 @@ function toCsv(rows: Place[]): string {
 }
 
 function Index() {
+  return (
+    <AccountGate>
+      <SearchDashboard />
+    </AccountGate>
+  );
+}
+
+function SearchDashboard() {
   const fn = useServerFn(searchPlaces);
   const [query, setQuery] = useState("Praktek Dokter Mandiri");
   const [area, setArea] = useState("Depok");

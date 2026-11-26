@@ -1,0 +1,2 @@
+## Account access architecture
+- Keep account sign-in and approval UI in a client-side gate, while every private server function independently verifies identity, approval, and admin role because route visibility alone cannot secure RPC endpoints.
