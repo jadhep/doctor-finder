@@ -1,3 +1,5 @@
-- [ ] Add email sign-in and self-registration with pending/rejected/approved account screens.
-- [ ] Add admin-only approval controls and protect the search service on the server.
-- [ ] Run access-rule tests and verify the live preview and build diagnostics.
+- [x] Confirm the initial app login account (`jadhep@gmail.com`) and keep account profiles email-only.
+- [x] Add email sign-in and self-registration with pending/rejected/approved account screens.
+- [x] Add admin-only approval controls and protect the search service on the server.
+- [x] Run access-rule tests and verify the latest preview build diagnostics.
+- [ ] Exercise the complete approval flow with a signed-in app session (not available in this test session).
